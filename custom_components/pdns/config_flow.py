@@ -39,7 +39,7 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass,
                 session,
                 url=user_input[CONF_URL],
-                domain=user_input[CONF_USERNAME],
+                domain=user_input[CONF_DOMAIN],
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
                 ip=user_input.get(CONF_IP_ADDRESS),
