@@ -12,9 +12,9 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_PASSWORD,
     CONF_USERNAME,
-    CONF_SCAN_INTERVAL,
-    CONF_URL
+    CONF_SCAN_INTERVAL
 )
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -26,7 +26,7 @@ DOMAIN = "powerdns"
 DEFAULT_INTERVAL = timedelta(minutes=10)
 
 TIMEOUT = 10
-UPDATE_URL = ""
+CONF_URL = "url"
 
 PDNS_ERRORS = {
     "nohost": "Hostname supplied does not exist under specified account",
@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 async def async_setup(hass, config):
-    """Initialize the OVH component."""
+    """Initialize the component."""
     conf = config[DOMAIN]
     domain = conf.get(CONF_DOMAIN)
     user = conf.get(CONF_USERNAME)
@@ -80,10 +80,10 @@ async def async_setup(hass, config):
 
 async def _update_pdns(hass, session, domain, user, password):
     """Update."""
-    params = {"system": "dyndns", "hostname": domain}
+    params = {"myip": "1.2.3.4", "hostname": domain}
     authentication = BasicAuth(user, password)
 
-    try:
+    try:        
         with async_timeout.timeout(TIMEOUT):
             resp = await session.get(url, params=params, auth=authentication)
             body = await resp.text()
@@ -93,7 +93,7 @@ async def _update_pdns(hass, session, domain, user, password):
 
                 return True
 
-            _LOGGER.warning("Updating failed: %s => %s", domain, OVH_ERRORS[body.strip()])
+            _LOGGER.warning("Updating failed: %s => %s", domain, PDNS_ERRORS[body.strip()])
 
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to API")
