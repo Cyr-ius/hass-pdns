@@ -12,7 +12,7 @@ To use the integration in your installation, add the following to your `configur
 | `domain` | yes | string |  The subdomain you are modifying the DNS configuration for |
 | `username` | yes | string | The DynHost username |
 | `password` | yes | string | Password for the DynHost username |
-| `url` | yes | string | Password for the DynHost username |
+| `url` | yes | string | Url for the DynHost server |
 | `scan_interval` | no |  time | How often to call the update service. (default: 10 minutes) |
 
 #### Basic Example:
