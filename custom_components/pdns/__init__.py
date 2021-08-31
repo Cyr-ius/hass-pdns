@@ -85,7 +85,7 @@ async def _update_pdns(hass, session, domain, user, password):
 
     try:
         with async_timeout.timeout(TIMEOUT):
-            resp = await session.get(UPDATE_URL, params=params, auth=authentication)
+            resp = await session.get(url, params=params, auth=authentication)
             body = await resp.text()
 
             if body.startswith("good") or body.startswith("nochg"):
