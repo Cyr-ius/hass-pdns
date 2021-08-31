@@ -71,7 +71,7 @@ async def async_setup(hass, config):
 
     async def update_domain_interval(now):
         """Update the entry."""
-        await _update_ovh(hass, session, domain, user, password)
+        await _update_pdns(hass, session, domain, user, password)
 
     async_track_time_interval(hass, update_domain_interval, interval)
 
