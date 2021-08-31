@@ -3,20 +3,19 @@
         "title": "PowerDNS Dynhost",
         "step": {
             "user": {
-                "title": "[%key:components::pdns::config::step::user::title%]",
+                "title": "Add dynamic dns domain",
                 "data": {
-                    "username": "[%key:common::config_flow::data::username%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "domain": "[%key:common::config_flow::data::domain%]",
-                    "url": "[%key:common::config_flow::data::url%]",
-                    "ip": "[%key:common::config_flow::data::ip%]"
+                    "username": "Username",
+                    "password": "Password",
+                    "domain": "Domain",
+                    "url": "Url",
+                    "ip_address": "IP address"
                 }
             }
         },
         "error": {
-            "login_inccorect": "[%key:components::pdns::config::error::login_inccorect%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]",
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+            "login_inccorect": "Can't connect to API",
+            "timeout": "Timeout from API for domain"
         }
     }
 }
