@@ -93,11 +93,15 @@ async def async_update_pdns(hass, session, url, domain, username, password, ip=N
             _LOGGER.warning(
                 "Updating failed: %s => %s", domain, PDNS_ERRORS[body.strip()]
             )
+<<<<<<< HEAD
             hass.data[DOMAIN]["status"] = {
                 "state": "update_failed",
                 "public_ip": ip,
                 "msg": PDNS_ERRORS[body.strip()],
             }
+=======
+            hass.data[DOMAIN]["status"] = {"state": "update_failed", "public_ip": ip, "msg": PDNS_ERRORS[body.strip()]}
+>>>>>>> b187669 (Up to date)
     except aiohttp.ClientError as err:
         _LOGGER.warning("Can't connect to API %s" % err)
         hass.data[DOMAIN]["status"] = {"state": "login_incorrect"}

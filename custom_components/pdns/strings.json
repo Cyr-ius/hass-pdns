@@ -4,6 +4,7 @@
         "step": {
             "user": {
                 "title": "Add dynamic dns domain",
+                "description": "Automatic detection of the public ip address if the field is empty",
                 "data": {
                     "username": "Username",
                     "password": "Password",
@@ -14,8 +15,10 @@
             }
         },
         "error": {
-            "login_inccorect": "Can't connect to API",
-            "timeout": "Timeout from API for domain"
+            "update_failed": "Update failed.",
+            "login_incorrect": "Can't connect to API.",
+            "timeout": "Timeout from API for domain.",
+            "unknown": "unknown error."
         }
     }
 }
