@@ -1,33 +1,25 @@
 """Integrate with PowerDNS service."""
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import aiohttp
-from aiohttp import BasicAuth
 import async_timeout
-import voluptuous as vol
-
+from aiohttp import BasicAuth
 from homeassistant.const import (
     CONF_DOMAIN,
+    CONF_IP_ADDRESS,
     CONF_PASSWORD,
+    CONF_URL,
     CONF_USERNAME,
-    CONF_SCAN_INTERVAL
 )
-
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "powerdns"
-
-DEFAULT_INTERVAL = timedelta(minutes=10)
-
+DEFAULT_INTERVAL = timedelta(minutes=15)
+DOMAIN = "pdns"
 TIMEOUT = 10
-CONF_URL = "url"
-
 PDNS_ERRORS = {
     "nohost": "Hostname supplied does not exist under specified account",
     "badauth": "Invalid username password combination",
@@ -35,70 +27,88 @@ PDNS_ERRORS = {
     "!donator": "An update request was sent with a feature that is not available",
     "abuse": "Username is blocked due to abuse",
 }
+_LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Requied(CONF_URL): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 async def async_setup(hass, config):
-    """Initialize the component."""
-    conf = config[DOMAIN]
-    domain = conf.get(CONF_DOMAIN)
-    user = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    interval = conf.get(CONF_SCAN_INTERVAL)
-    url = conf.get(CONF_URL)
+    """Load configuration for component."""
+    hass.data.setdefault(DOMAIN, {})
+    return True
 
+
+async def async_setup_entry(hass, config_entry):
+    """Initialize the component."""
+    domain = config_entry.data.get(CONF_DOMAIN)
+    user = config_entry.data.get(CONF_USERNAME)
+    password = config_entry.data.get(CONF_PASSWORD)
+    url = config_entry.data.get(CONF_URL)
+    ip = config_entry.data.get(CONF_IP_ADDRESS)
     session = async_get_clientsession(hass)
 
-    result = await _update_pdns(hass, session, domain, user, password)
+    async def async_update_data():
+        """Update the entry."""
+        if await async_update_pdns(hass, session, url, domain, user, password, ip):
+            return hass.data[DOMAIN]["status"]
 
-    if not result:
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=DOMAIN,
+        update_method=async_update_data,
+        update_interval=DEFAULT_INTERVAL,
+    )
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
+
+    if coordinator.data is None:
         return False
 
-    async def update_domain_interval(now):
-        """Update the entry."""
-        await _update_pdns(hass, session, domain, user, password)
-
-    async_track_time_interval(hass, update_domain_interval, interval)
+    hass.data[DOMAIN]["coordinator"] = coordinator
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
+    )
 
     return True
 
 
-async def _update_pdns(hass, session, domain, user, password):
+async def async_update_pdns(hass, session, url, domain, username, password, ip=None):
     """Update."""
-    params = {"myip": "1.2.3.4", "hostname": domain}
-    authentication = BasicAuth(user, password)
+    if ip is None:
+        resp = await session.get("https://api.ipify.org")
+        ip = await resp.text()
 
-    try:        
+    params = {"myip": ip, "hostname": domain}
+    authentification = BasicAuth(username, password)
+    try:
         with async_timeout.timeout(TIMEOUT):
-            resp = await session.get(url, params=params, auth=authentication)
+            resp = await session.get(url, params=params, auth=authentification)
             body = await resp.text()
 
             if body.startswith("good") or body.startswith("nochg"):
                 _LOGGER.info("Updating for domain: %s", domain)
-
+                hass.data[DOMAIN]["status"] = {"state": body.strip(), "public_ip": ip}
                 return True
-
-            _LOGGER.warning("Updating failed: %s => %s", domain, PDNS_ERRORS[body.strip()])
-
-    except aiohttp.ClientError:
-        _LOGGER.warning("Can't connect to API")
-
+            _LOGGER.warning(
+                "Updating failed: %s => %s", domain, PDNS_ERRORS[body.strip()]
+            )
+            hass.data[DOMAIN]["status"] = {
+                "state": "update_failed",
+                "public_ip": ip,
+                "msg": PDNS_ERRORS[body.strip()],
+            }
+    except aiohttp.ClientError as err:
+        _LOGGER.warning("Can't connect to API %s" % err)
+        hass.data[DOMAIN]["status"] = {"state": "login_incorrect"}
     except asyncio.TimeoutError:
         _LOGGER.warning("Timeout from API for domain: %s", domain)
+        hass.data[DOMAIN]["status"] = {"state": "timout"}
 
     return False
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
+    return True
