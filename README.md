@@ -18,7 +18,7 @@ To use the integration in your installation, add the following to your `configur
 #### Basic Example:
 
 ```yaml
-ovh:
+pdns:
   domain: subdomain.domain.com
   username: YOUR_USERNAME
   password: YOUR_PASSWORD
