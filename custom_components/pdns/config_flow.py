@@ -41,7 +41,7 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 url=user_input[CONF_URL],
                 domain=user_input[CONF_USERNAME],
                 username=user_input[CONF_USERNAME],
-                password=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
                 ip=user_input.get(CONF_IP_ADDRESS),
             ):
                 return self.async_create_entry(title="PowerDNS Dynhost", data=user_input)
