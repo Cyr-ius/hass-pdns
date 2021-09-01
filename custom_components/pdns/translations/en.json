@@ -23,7 +23,8 @@
             "badauth": "Invalid username password combination",
             "badagent": "Client disabled",
             "!donator": "An update request was sent with a feature that is not available",
-            "abuse": "Username is blocked due to abuse"
+            "abuse": "Username is blocked due to abuse",
+            "detect_failed": "Unable to determine public ip address."
         }
     }
 }
