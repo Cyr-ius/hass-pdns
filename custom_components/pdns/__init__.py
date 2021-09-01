@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 DEFAULT_INTERVAL = timedelta(minutes=15)
-MYIP_CHECK = "myip.opendns.com"
+MYIP_CHECK = "https://api.ipify.org"
 DOMAIN = "pdns"
 TIMEOUT = 10
 PDNS_ERRORS = {
@@ -69,14 +69,8 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_update_pdns(hass, session, url, domain, username, password, ipv6=False):
     """Update."""
-    try:
-        resolver = aiodns.DNSResolver()
-        querytype = "AAAA" if ipv6 else "A"
-        resp = await resolver.query(MYIP_CHECK, querytype)
-        ip = resp[0].host
-    except DNSError as err:
-        _LOGGER.error("Exception while resolving host: %s", err)
-        raise DetectionFailed("Exception while resolving host: %s", err)
+    resp = await session.get(MYIP_CHECK)
+    ip = await resp.text()
 
     params = {"myip": ip, "hostname": domain}
     authentification = BasicAuth(username, password)
