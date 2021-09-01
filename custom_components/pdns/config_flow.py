@@ -3,12 +3,23 @@ import logging
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import (CONF_DOMAIN, CONF_IP_ADDRESS, CONF_PASSWORD,
-                                 CONF_URL, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_DOMAIN,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import DOMAIN, CannotConnect, TimeoutExpired, PDNSFailed, DetectionFailed, async_update_pdns
+from . import (
+    DOMAIN,
+    CannotConnect,
+    TimeoutExpired,
+    PDNSFailed,
+    DetectionFailed,
+    async_update_pdns,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -16,7 +27,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_IP_ADDRESS): cv.boolean,
     }
 )
 
@@ -42,9 +52,10 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     domain=user_input[CONF_DOMAIN],
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
-                    ipv6=user_input.get(CONF_IP_ADDRESS),
                 )
-                return self.async_create_entry(title="PowerDNS Dynhost", data=user_input)
+                return self.async_create_entry(
+                    title="PowerDNS Dynhost", data=user_input
+                )
             except CannotConnect:
                 errors["base"] = "login_incorrect"
             except TimeoutExpired:

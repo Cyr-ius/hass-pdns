@@ -3,13 +3,17 @@ import asyncio
 import logging
 from datetime import timedelta
 
-import aiodns
 import aiohttp
 import async_timeout
-from aiodns.error import DNSError
+import homeassistant.util.dt as dt_util
 from aiohttp import BasicAuth
-from homeassistant.const import (CONF_DOMAIN, CONF_IP_ADDRESS, CONF_PASSWORD,
-                                 CONF_URL, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_DOMAIN,
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -40,12 +44,11 @@ async def async_setup_entry(hass, config_entry):
     user = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
     url = config_entry.data.get(CONF_URL)
-    ip = config_entry.data.get(CONF_IP_ADDRESS)
     session = async_get_clientsession(hass)
 
     async def async_update_data():
         """Update the entry."""
-        return await async_update_pdns(hass, session, url, domain, user, password, ip)
+        return await async_update_pdns(hass, session, url, domain, user, password)
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -67,7 +70,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_update_pdns(hass, session, url, domain, username, password, ipv6=False):
+async def async_update_pdns(hass, session, url, domain, username, password):
     """Update."""
     resp = await session.get(MYIP_CHECK)
     ip = await resp.text()
@@ -80,7 +83,11 @@ async def async_update_pdns(hass, session, url, domain, username, password, ipv6
             body = await resp.text()
 
             if body.startswith("good") or body.startswith("nochg"):
-                return {"state": body.strip(), "public_ip": ip}
+                return {
+                    "state": body.strip(),
+                    "public_ip": ip,
+                    "last update": dt_util.utcnow(),
+                }
             raise PDNSFailed(body.strip(), domain)
     except aiohttp.ClientError as err:
         _LOGGER.error("Can't connect to API %s" % err)

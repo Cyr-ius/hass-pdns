@@ -2,6 +2,7 @@
 import logging
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
+    DEVICE_CLASS_PROBLEM,
 )
 
 from . import DOMAIN
@@ -23,6 +24,11 @@ class DyndnsStatus(BinarySensorEntity):
         self.coordinator = coordinator
 
     @property
+    def device_class(self):
+        """Return the class of this device."""
+        return DEVICE_CLASS_PROBLEM
+
+    @property
     def name(self):
         """Return name sensor."""
         return "Dynamic Update"
@@ -31,8 +37,8 @@ class DyndnsStatus(BinarySensorEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         if self.coordinator.data.get("public_ip"):
-            return True
-        return False
+            return False
+        return True
 
     @property
     def unique_id(self):
