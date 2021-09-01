@@ -75,6 +75,7 @@ async def async_update_pdns(hass, session, url, domain, username, password, ipv6
         resp = await resolver.query(MYIP_CHECK, querytype)
         ip = resp[0].host
     except DNSError as err:
+        _LOGGER.error("Exception while resolving host: %s", err)
         raise DetectionFailed("Exception while resolving host: %s", err)
 
     params = {"myip": ip, "hostname": domain}
@@ -88,8 +89,10 @@ async def async_update_pdns(hass, session, url, domain, username, password, ipv6
                 return {"state": body.strip(), "public_ip": ip}
             raise PDNSFailed(body.strip(), domain)
     except aiohttp.ClientError as err:
+        _LOGGER.error("Can't connect to API %s" % err)
         raise CannotConnect("Can't connect to API %s" % err)
     except asyncio.TimeoutError:
+        _LOGGER.error("Timeout from API for domain: %s", domain)
         raise TimeoutExpired("Timeout from API for domain: %s", domain)
 
 

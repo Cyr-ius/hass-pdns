@@ -10,7 +10,7 @@
                     "password": "Password",
                     "domain": "Domain",
                     "url": "Url",
-                    "ip_address": "IP address"
+                    "ip_address": "Enable IPv6"
                 }
             }
         },
