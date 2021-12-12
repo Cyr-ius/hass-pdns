@@ -2,7 +2,7 @@
 import logging
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
 )
 
 from . import DOMAIN
@@ -26,7 +26,7 @@ class DyndnsStatus(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device."""
-        return DEVICE_CLASS_PROBLEM
+        return BinarySensorDeviceClass.PROBLEM
 
     @property
     def name(self):
