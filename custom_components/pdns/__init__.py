@@ -93,8 +93,8 @@ async def async_update_pdns(hass, session, url, domain, username, password):
         _LOGGER.error("Can't connect to API %s" % err)
         raise CannotConnect("Can't connect to API %s" % err)
     except asyncio.TimeoutError:
-        _LOGGER.error("Timeout from API for domain: %s", domain)
-        raise TimeoutExpired("Timeout from API for domain: %s", domain)
+        _LOGGER.error("Timeout from API for domain: %s" % domain)
+        raise TimeoutExpired("Timeout from API for domain: %s" % domain)
 
 
 async def async_unload_entry(hass, config_entry):
