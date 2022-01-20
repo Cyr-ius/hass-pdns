@@ -89,12 +89,10 @@ async def async_update_pdns(hass, session, url, domain, username, password):
                     "last update": dt_util.utcnow(),
                 }
             raise PDNSFailed(body.strip(), domain)
-    except aiohttp.ClientError as err:
-        _LOGGER.error("Can't connect to API %s" % err)
-        raise CannotConnect("Can't connect to API %s" % err)
-    except asyncio.TimeoutError:
-        _LOGGER.error("Timeout from API for domain: %s" % domain)
-        raise TimeoutExpired("Timeout from API for domain: %s" % domain)
+    except aiohttp.ClientError as error:
+        raise CannotConnect("Can't connect to API") from error
+    except asyncio.TimeoutError as error:
+        raise TimeoutExpired(f"Timeout from API for domain: {domain}") from error
 
 
 async def async_unload_entry(hass, config_entry):
