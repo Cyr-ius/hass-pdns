@@ -8,8 +8,8 @@
                 "data": {
                     "username": "Username",
                     "password": "Password",
-                    "domain": "Domain",
-                    "url": "Url",
+                    "dns_alias": "DNS Alias",
+                    "pdns_server": "Server",
                     "ip_address": "Enable IPv6"
                 }
             }

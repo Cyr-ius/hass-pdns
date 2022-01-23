@@ -3,30 +3,19 @@ import logging
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_DOMAIN,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from . import (
-    DOMAIN,
-    CannotConnect,
-    TimeoutExpired,
-    PDNSFailed,
-    DetectionFailed,
-    async_update_pdns,
-)
+from . import DOMAIN, CONF_ALIAS, CONF_PDNSSRV
+from .pdns import PDNS, CannotConnect, TimeoutExpired, PDNSFailed, DetectionFailed
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DOMAIN): cv.string,
+        vol.Required(CONF_ALIAS): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_URL): cv.string,
+        vol.Required(CONF_PDNSSRV): cv.string,
     }
 )
 
@@ -44,15 +33,14 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                session = async_get_clientsession(self.hass)
-                await async_update_pdns(
-                    self.hass,
-                    session,
-                    url=user_input[CONF_URL],
-                    domain=user_input[CONF_DOMAIN],
+                client = PDNS(
+                    servername=user_input[CONF_PDNSSRV],
+                    alias=user_input[CONF_ALIAS],
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
+                    session=async_create_clientsession(self.hass),
                 )
+                await client.async_update()
                 return self.async_create_entry(
                     title="PowerDNS Dynhost", data=user_input
                 )

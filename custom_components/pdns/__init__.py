@@ -1,34 +1,18 @@
 """Integrate with PowerDNS service."""
-import asyncio
 import logging
 from datetime import timedelta
 
-import aiohttp
-import async_timeout
-import homeassistant.util.dt as dt_util
-from aiohttp import BasicAuth
-from homeassistant.const import (
-    CONF_DOMAIN,
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-)
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-DEFAULT_INTERVAL = timedelta(minutes=15)
-MYIP_CHECK = "https://api.ipify.org"
+from .pdns import PDNS, CannotConnect, TimeoutExpired, PDNSFailed, DetectionFailed
+
+DEFAULT_INTERVAL = 15
 DOMAIN = "pdns"
-TIMEOUT = 10
-PDNS_ERRORS = {
-    "nohost": "Hostname supplied does not exist under specified account",
-    "badauth": "Invalid username password combination",
-    "badagent": "Client disabled",
-    "!donator": "An update request was sent with a feature that is not available",
-    "abuse": "Username is blocked due to abuse",
-}
+CONF_PDNSSRV = "pdns_server"
+CONF_ALIAS = "dns_alias"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,27 +24,22 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Initialize the component."""
-    domain = config_entry.data.get(CONF_DOMAIN)
-    user = config_entry.data.get(CONF_USERNAME)
+    alias = config_entry.data.get(CONF_ALIAS)
+    username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
-    url = config_entry.data.get(CONF_URL)
-    session = async_get_clientsession(hass)
+    servername = config_entry.data.get(CONF_PDNSSRV)
 
-    async def async_update_data():
-        """Update the entry."""
-        return await async_update_pdns(hass, session, url, domain, user, password)
+    session = async_create_clientsession(hass)
+    client = PDNS(servername, alias, username, password, session)
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=DOMAIN,
-        update_method=async_update_data,
-        update_interval=DEFAULT_INTERVAL,
+        update_method=client.async_update,
+        update_interval=timedelta(minutes=DEFAULT_INTERVAL),
     )
     await coordinator.async_config_entry_first_refresh()
-
-    if coordinator.data is None:
-        return False
 
     hass.data[DOMAIN] = coordinator
     hass.async_create_task(
@@ -70,54 +49,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_update_pdns(hass, session, url, domain, username, password):
-    """Update."""
-    resp = await session.get(MYIP_CHECK)
-    ip = await resp.text()
-
-    params = {"myip": ip, "hostname": domain}
-    authentification = BasicAuth(username, password)
-    try:
-        with async_timeout.timeout(TIMEOUT):
-            resp = await session.get(url, params=params, auth=authentification)
-            body = await resp.text()
-
-            if body.startswith("good") or body.startswith("nochg"):
-                return {
-                    "state": body.strip(),
-                    "public_ip": ip,
-                    "last update": dt_util.utcnow(),
-                }
-            raise PDNSFailed(body.strip(), domain)
-    except aiohttp.ClientError as error:
-        raise CannotConnect("Can't connect to API") from error
-    except asyncio.TimeoutError as error:
-        raise TimeoutExpired(f"Timeout from API for domain: {domain}") from error
-
-
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
     return True
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class TimeoutExpired(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class PDNSFailed(HomeAssistantError):
-    """Error to indicate there is invalid pdns communication."""
-
-    def __init__(self, state, domain):
-        """Init."""
-        self.state = state
-        self.domain = domain
-        self.message = "Failed: %s => %s" % (PDNS_ERRORS[state], domain)
-
-
-class DetectionFailed(HomeAssistantError):
-    """Error to indicate there is invalid retrieve public ip address."""
