@@ -26,7 +26,7 @@ class PDNS:
         self.authentification = BasicAuth(username, password)
 
     async def async_update(self):
-        """Update Hostname to Power DNS."""
+        """Update Alias to Power DNS."""
         self.ip = await self._async_get_public_ip()
         try:
             params = {"myip": self.ip, "hostname": self.alias}
@@ -40,11 +40,11 @@ class PDNS:
                     "public_ip": self.ip,
                     "last_seen": datetime.now(),
                 }
-            raise PDNSFailed(body.strip(), self.hostname)
+            raise PDNSFailed(body.strip(), self.alias)
         except ClientError as error:
             raise CannotConnect("Can't connect to API : %s", error) from error
         except asyncio.TimeoutError as error:
-            raise TimeoutExpired(f"API Timeout from {self.hostname}") from error
+            raise TimeoutExpired(f"API Timeout from {self.alias}") from error
 
     async def _async_get_public_ip(self):
         """Get Public ip address."""
