@@ -25,3 +25,10 @@ pdns:
   url: http://xxxxx
 ```
 Based on the official [No-IP.com](https://github.com/home-assistant/core/tree/dev/homeassistant/components/no_ip) and [Mythic Beasts](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mythicbeastsdns) integrations. Thanks to the creators!
+
+## Configuration
+
+The preferred way to setup the platform is by enabling the discovery component.
+Add your equipment via the Integration menu
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pdns)
