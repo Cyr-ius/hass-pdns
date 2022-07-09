@@ -3,19 +3,26 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Defer binary sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([DyndnsStatus(coordinator)])
 
 
 class DyndnsStatus(CoordinatorEntity, BinarySensorEntity):
-    """Representation of a VocalMsg sensor."""
+    """Representation of a status sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_name = "Dynamic Update"
@@ -23,7 +30,7 @@ class DyndnsStatus(CoordinatorEntity, BinarySensorEntity):
 
     def __init__(self, coordinator):
         """Initialize the sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
 
     @property
     def is_on(self):
