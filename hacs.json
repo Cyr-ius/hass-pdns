@@ -1,5 +1,6 @@
 {
   "name": "PDNS DynHost",
   "country": "FR",
+  "domains": ["binary_sensor"],
   "render_readme": true
 }
