@@ -63,7 +63,7 @@ class PDNSDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Class to manage fetching data API."""
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(DEFAULT_INTERVAL)
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=DEFAULT_INTERVAL)
         )
         session = async_create_clientsession(hass)
         self.pdns_client = PDNS(servername, alias, username, password, session)
