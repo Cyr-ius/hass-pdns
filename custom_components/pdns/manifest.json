@@ -2,7 +2,7 @@
   "domain": "pdns",
   "name": "PowerDNS DynHost",
   "config_flow": true,
-  "documentation": "https://github.com/Cyr-ius/hass-pdns/blob/master/README.md",
+  "documentation": "https://github.com/Cyr-ius/hass-pdns",
   "issue_tracker": "https://github.com/Cyr-ius/hass-pdns/issues",
   "codeowners": ["@Cyr-ius"],
   "iot_class": "cloud_polling",
