@@ -1,5 +1,6 @@
 {
   "name": "PDNS DynHost",
   "country": "FR",
+  "documentation": "https://github.com/Cyr-ius/hass-pdns",
   "render_readme": true
 }
