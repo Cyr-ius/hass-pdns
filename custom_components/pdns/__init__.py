@@ -12,26 +12,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .pdns import PDNS, PDNSFailed
 
-DEFAULT_INTERVAL = 15
+SCAN_INTERVAL = 15
 DOMAIN = "pdns"
 CONF_PDNSSRV = "pdns_server"
 CONF_ALIAS = "dns_alias"
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor"]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initialize the component."""
     hass.data.setdefault(DOMAIN, {})
 
-    coordinator = PDNSDataUpdateCoordinator(
-        hass,
-        entry,
-        entry.data.get(CONF_PDNSSRV),
-        entry.data.get(CONF_ALIAS),
-        entry.data.get(CONF_USERNAME),
-        entry.data.get(CONF_PASSWORD),
-    )
+    coordinator = PDNSDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     if coordinator.data is None:
         return False
@@ -52,21 +45,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class PDNSDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to fetch datas."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        servername: str,
-        alias: str,
-        username: str,
-        password: str,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Class to manage fetching data API."""
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=DEFAULT_INTERVAL)
-        )
         session = async_create_clientsession(hass)
-        self.pdns_client = PDNS(servername, alias, username, password, session)
+        self.pdns_client = PDNS(
+            entry.data.get(CONF_PDNSSRV),
+            entry.data.get(CONF_ALIAS),
+            entry.data.get(CONF_USERNAME),
+            entry.data.get(CONF_PASSWORD),
+            session,
+        )
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=SCAN_INTERVAL)
+        )
 
     async def _async_update_data(self) -> dict:
         try:

@@ -41,9 +41,6 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     session=async_create_clientsession(self.hass),
                 )
                 await client.async_update()
-                return self.async_create_entry(
-                    title="PowerDNS Dynhost", data=user_input
-                )
             except CannotConnect:
                 errors["base"] = "login_incorrect"
             except TimeoutExpired:
@@ -52,6 +49,10 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = err.args[0]
             except DetectionFailed:
                 errors["base"] = "detect_failed"
+            else:
+                return self.async_create_entry(
+                    title="PowerDNS Dynhost", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

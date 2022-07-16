@@ -31,13 +31,9 @@ class DyndnsStatus(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator):
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._attr_extra_state_attributes = coordinator.data
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.coordinator.data.get("public_ip") is None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self.coordinator.data
