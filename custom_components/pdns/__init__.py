@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -47,13 +47,12 @@ class PDNSDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Class to manage fetching data API."""
-        session = async_create_clientsession(hass)
         self.pdns_client = PDNS(
             entry.data.get(CONF_PDNSSRV),
             entry.data.get(CONF_ALIAS),
             entry.data.get(CONF_USERNAME),
             entry.data.get(CONF_PASSWORD),
-            session,
+            async_create_clientsession(hass),
         )
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=SCAN_INTERVAL)
