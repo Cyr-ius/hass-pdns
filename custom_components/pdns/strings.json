@@ -25,6 +25,9 @@
             "!donator": "An update request was sent with a feature that is not available",
             "abuse": "Username is blocked due to abuse",
             "detect_failed": "Unable to determine public ip address."
-        }
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+        }        
     }
 }
