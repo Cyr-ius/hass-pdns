@@ -53,7 +53,7 @@ class PDNS:
     async def _async_get_public_ip(self) -> None:
         """Get Public ip address."""
         try:
-            response = self.session.get(MYIP_CHECK)
+            response = await self.session.get(MYIP_CHECK)
             if response.status != 200:
                 raise CannotConnect(f"Can't fetch public ip ({response.status})")
             self.ip = await response.text()
