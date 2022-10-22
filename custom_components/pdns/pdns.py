@@ -44,7 +44,7 @@ class PDNS:
         except ClientError as error:
             raise CannotConnect("Can't connect to API : %s", error) from error
         except asyncio.TimeoutError as error:
-            raise TimeoutExpired(f"API Timeout from {self.alias}") from error
+            raise TimeoutExpired("API Timeout from %s", self.alias) from error
 
     async def _async_get_public_ip(self):
         """Get Public ip address."""
@@ -60,20 +60,14 @@ class PDNS:
 class PDNSFailed(Exception):
     """Error to indicate there is invalid pdns communication."""
 
-    def __init__(self, state, domain):
-        """Init."""
-        self.state = state
-        self.domain = domain
-        self.message = "Failed: %s => %s" % (PDNS_ERRORS[state], domain)
 
-
-class DetectionFailed(Exception):
+class DetectionFailed(PDNSFailed):
     """Error to indicate there is invalid retrieve public ip address."""
 
 
-class CannotConnect(Exception):
+class CannotConnect(PDNSFailed):
     """Error to indicate we cannot connect."""
 
 
-class TimeoutExpired(Exception):
+class TimeoutExpired(PDNSFailed):
     """Error to indicate there is invalid auth."""
