@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from datetime import datetime
 
 from aiohttp import BasicAuth, ClientError, ClientSession
@@ -50,7 +49,7 @@ class PDNS:
                         raise CannotConnect(f"Can't connect to API ({body})")
                     raise CannotConnect(f"Can't connect to API ({response.status})")
         except ClientError as error:
-            raise CannotConnect("Client error") from error
+            raise CannotConnect(f"Error {error.strerror}") from error
         except asyncio.TimeoutError as error:
             raise TimeoutExpired(f"API Timeout from {self.alias}") from error
 
