@@ -37,5 +37,5 @@ class DyndnsStatus(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self.coordinator.data.get(CONF_PUBLIC_IP) is None
+        """Return true if the binary sensor have a trouble."""
+        return self.available is False

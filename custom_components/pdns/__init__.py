@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .pdns import PDNS, PDNSFailed
 
@@ -57,9 +57,7 @@ class PDNSDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict:
-        state = {}
         try:
-            state = await self.api.async_update()
+            return await self.api.async_update()
         except PDNSFailed as error:
-            _LOGGER.error(error)
-        return state
+            raise UpdateFailed from error
