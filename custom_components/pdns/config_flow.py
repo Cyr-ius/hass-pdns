@@ -6,9 +6,10 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from yarl import URL as yurl
 
-from . import DOMAIN, CONF_ALIAS, CONF_PDNSSRV
-from .pdns import PDNS, CannotConnect, TimeoutExpired, PDNSFailed, DetectionFailed
+from . import CONF_ALIAS, CONF_PDNSSRV, DOMAIN
+from .pdns import PDNS, CannotConnect, DetectionFailed, PDNSFailed, TimeoutExpired
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -33,6 +34,12 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
+                self._async_abort_entries_match(
+                    {
+                        CONF_PDNSSRV: user_input[CONF_PDNSSRV],
+                        CONF_ALIAS: user_input[CONF_ALIAS],
+                    },
+                )
                 client = PDNS(
                     servername=user_input[CONF_PDNSSRV],
                     alias=user_input[CONF_ALIAS],
@@ -51,7 +58,7 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "detect_failed"
             else:
                 return self.async_create_entry(
-                    title="PowerDNS Dynhost", data=user_input
+                    title=yurl(user_input[CONF_ALIAS]), data=user_input
                 )
 
         return self.async_show_form(
