@@ -60,7 +60,7 @@ class PDNS:
         except asyncio.TimeoutError as error:
             raise TimeoutExpired("Timeout to get public ip address") from error
         except Exception as error:
-            raise DetectionFailed("Get public ip address failed") from error
+            raise DetectionFailed(str(error)) from error
 
 
 class PDNSFailed(Exception):
