@@ -10,6 +10,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN
 
+CONF_PUBLIC_IP = "public_ip"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,4 +38,4 @@ class DyndnsStatus(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.coordinator.data.get("public_ip") is None
+        return self.coordinator.data.get(CONF_PUBLIC_IP) is None
