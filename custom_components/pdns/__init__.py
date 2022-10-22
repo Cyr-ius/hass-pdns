@@ -26,8 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = PDNSDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    if coordinator.data is None:
-        return False
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -47,19 +45,19 @@ class PDNSDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Class to manage fetching data API."""
-        self.pdns_client = PDNS(
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=SCAN_INTERVAL)
+        )
+        self.api = PDNS(
             entry.data.get(CONF_PDNSSRV),
             entry.data.get(CONF_ALIAS),
             entry.data.get(CONF_USERNAME),
             entry.data.get(CONF_PASSWORD),
             async_create_clientsession(hass),
         )
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=SCAN_INTERVAL)
-        )
 
     async def _async_update_data(self) -> dict:
         try:
-            return await self.pdns_client.async_update()
+            return await self.api.async_update()
         except PDNSFailed as error:
             raise UpdateFailed(error) from error
