@@ -34,20 +34,17 @@ class PDNS:
         await self._async_get_public_ip()
         try:
             params = {"myip": self.ip, "hostname": self.alias}
-            async with self.session as session:
-                async with session.get(
-                    self.url, params=params, auth=self.authentification
-                ) as response:
-                    if response.status == 200:
-                        body = await response.text()
-                        if body.startswith("good") or body.startswith("nochg"):
-                            return {
-                                "state": body.strip(),
-                                "public_ip": self.ip,
-                                "last_seen": datetime.now(),
-                            }
-                        raise CannotConnect(f"Can't connect to API ({body})")
-                    raise CannotConnect(f"Can't connect to API ({response.status})")
+            response = await self.session.get(self.url, params=params, auth=self.authentification)
+            if response.status != 200:
+                raise CannotConnect(f"Can't connect to API ({response.status})")
+            body = await response.text()
+            if body.startswith("good") or body.startswith("nochg"):
+                return {
+                    "state": body.strip(),
+                    "public_ip": self.ip,
+                    "last_seen": datetime.now(),
+                }
+            raise CannotConnect(f"Can't connect to API ({body})")
         except ClientError as error:
             raise CannotConnect(f"Error {error.strerror}") from error
         except asyncio.TimeoutError as error:
@@ -56,12 +53,10 @@ class PDNS:
     async def _async_get_public_ip(self) -> None:
         """Get Public ip address."""
         try:
-            async with self.session as session:
-                async with session.get(MYIP_CHECK) as response:
-                    if response.status == 200:
-                        self.ip = await response.text()
-                    else:
-                        raise CannotConnect(f"Can't fetch public ip ({response.status})")
+            response = self.session.get(MYIP_CHECK)
+            if response.status != 200:
+                raise CannotConnect(f"Can't fetch public ip ({response.status})")
+            self.ip = await response.text()
         except asyncio.TimeoutError as error:
             raise TimeoutExpired("Timeout to get public ip address") from error
         except Exception as error:
