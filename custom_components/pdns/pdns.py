@@ -1,5 +1,8 @@
 """PDNS Api."""
+from __future__ import annotations
+
 import asyncio
+import logging
 from datetime import datetime
 
 from aiohttp import BasicAuth, ClientError, ClientSession
@@ -17,7 +20,9 @@ PDNS_ERRORS = {
 class PDNS:
     """Powerdns class."""
 
-    def __init__(self, servername, alias, username, password, session=None):
+    def __init__(
+        self, servername: str, alias: str, username: str, password: str, session=None
+    ) -> None:
         """Initialize."""
         self.ip = None
         self.url = f"https://{servername}/nic/update"
@@ -25,36 +30,43 @@ class PDNS:
         self.session = session if session else ClientSession()
         self.authentification = BasicAuth(username, password)
 
-    async def async_update(self):
+    async def async_update(self) -> dict(str, str, datetime):
         """Update Alias to Power DNS."""
-        self.ip = await self._async_get_public_ip()
+        await self._async_get_public_ip()
         try:
             params = {"myip": self.ip, "hostname": self.alias}
-            resp = await self.session.get(
-                self.url, params=params, auth=self.authentification
-            )
-            body = await resp.text()
-            if body.startswith("good") or body.startswith("nochg"):
-                return {
-                    "state": body.strip(),
-                    "public_ip": self.ip,
-                    "last_seen": datetime.now(),
-                }
-            raise PDNSFailed(body.strip(), self.alias)
+            async with self.session as session:
+                async with session.get(
+                    self.url, params=params, auth=self.authentification
+                ) as response:
+                    if response.status == 200:
+                        body = await response.text()
+                        if body.startswith("good") or body.startswith("nochg"):
+                            return {
+                                "state": body.strip(),
+                                "public_ip": self.ip,
+                                "last_seen": datetime.now(),
+                            }
+                        raise CannotConnect(f"Can't connect to API ({body})")
+                    raise CannotConnect(f"Can't connect to API ({response.status})")
         except ClientError as error:
-            raise CannotConnect("Can't connect to API : %s", error) from error
+            raise CannotConnect("Client error") from error
         except asyncio.TimeoutError as error:
-            raise TimeoutExpired("API Timeout from %s", self.alias) from error
+            raise TimeoutExpired(f"API Timeout from {self.alias}") from error
 
-    async def _async_get_public_ip(self):
+    async def _async_get_public_ip(self) -> None:
         """Get Public ip address."""
         try:
-            resp = await self.session.get(MYIP_CHECK)
-            return await resp.text()
+            async with self.session as session:
+                async with session.get(MYIP_CHECK) as response:
+                    if response.status == 200:
+                        self.ip = await response.text()
+                    else:
+                        raise CannotConnect(f"Can't fetch public ip ({response.status})")
         except asyncio.TimeoutError as error:
             raise TimeoutExpired("Timeout to get public ip address") from error
         except Exception as error:
-            raise DetectionFailed("Get public ip address failed %s", error) from error
+            raise DetectionFailed("Get public ip address failed") from error
 
 
 class PDNSFailed(Exception):
