@@ -57,8 +57,9 @@ class PDNSDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict:
+        state = {}
         try:
-            public_ip = await self.api.async_update()
+            state = await self.api.async_update()
         except PDNSFailed as error:
             _LOGGER.error(error)
-        return public_ip if public_ip else {}
+        return state
