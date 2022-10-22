@@ -6,7 +6,7 @@
                 "title": "Ajout d'un ddns",
                 "description": "Détection automatique de l'adresse ip publique",
                 "data": {
-                    "username": "Username",
+                    "username": "Utilisateur",
                     "password": "Mot de passe",
                     "dns_alias": "Alias DNS",
                     "pdns_server": "Serveur",
