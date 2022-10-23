@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime
 
 from aiohttp import BasicAuth, ClientError, ClientSession
 
-MYIP_CHECK = "https://api.ipify.org"
+MYIP_CHECK = "https://v4.ident.me/"
 PDNS_ERRORS = {
     "nohost": "Hostname supplied does not exist under specified account",
     "badauth": "Invalid username password combination",
@@ -14,6 +15,8 @@ PDNS_ERRORS = {
     "!donator": "An update request was sent with a feature that is not available",
     "abuse": "Username is blocked due to abuse",
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PDNS:
@@ -23,7 +26,6 @@ class PDNS:
         self, servername: str, alias: str, username: str, password: str, session=None
     ) -> None:
         """Initialize."""
-        self.ip = None
         self.url = f"https://{servername}/nic/update"
         self.alias = alias
         self.session = session if session else ClientSession()
@@ -31,18 +33,18 @@ class PDNS:
 
     async def async_update(self) -> dict(str, str, datetime):
         """Update Alias to Power DNS."""
-        await self._async_get_public_ip()
         try:
-            params = {"myip": self.ip, "hostname": self.alias}
+            public_ip = await self._async_get_public_ip()
+            params = {"myip": public_ip, "hostname": self.alias}
             response = await self.session.get(self.url, params=params, auth=self.authentification)
             if response.status != 200:
                 raise CannotConnect(f"Can't connect to API ({response.status})")
             body = await response.text()
             if body.startswith("good") or body.startswith("nochg"):
+                state = body.strip()
+                _LOGGER.debug(f"State:{state}")
                 return {
-                    "state": body.strip(),
-                    "public_ip": self.ip,
-                    "last_seen": datetime.now(),
+                    "state": state, "public_ip": public_ip, "last_seen": datetime.now()
                 }
             raise CannotConnect(f"Can't connect to API ({body})")
         except ClientError as error:
@@ -56,7 +58,9 @@ class PDNS:
             response = await self.session.get(MYIP_CHECK)
             if response.status != 200:
                 raise CannotConnect(f"Can't fetch public ip ({response.status})")
-            self.ip = await response.text()
+            public_ip = await response.text()
+            _LOGGER.debug(f"Public Ip:{public_ip}")
+            return public_ip
         except asyncio.TimeoutError as error:
             raise TimeoutExpired("Timeout to get public ip address") from error
         except Exception as error:
