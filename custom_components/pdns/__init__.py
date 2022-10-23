@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .pdns import PDNS, PDNSFailed
 
-SCAN_INTERVAL = 15
+SCAN_INTERVAL = 600
 DOMAIN = "pdns"
 CONF_PDNSSRV = "pdns_server"
 CONF_ALIAS = "dns_alias"
@@ -46,7 +46,7 @@ class PDNSDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Class to manage fetching data API."""
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=SCAN_INTERVAL)
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=SCAN_INTERVAL)
         )
         self.api = PDNS(
             entry.data.get(CONF_PDNSSRV),
