@@ -42,4 +42,4 @@ jobs:
           # stop the build if there are Pylint errors
           # there is a bug with E1136 (https://github.com/PyCQA/pylint/issues/1498)
           # so we temporarily disable it.
-          pylint --disable=I,C,R --extension-pkg-whitelist=numpy custom_components/pdns
+          pylint --disable=I,C,R,E0401 --extension-pkg-whitelist=numpy custom_components/pdns
