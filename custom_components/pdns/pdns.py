@@ -42,13 +42,13 @@ class PDNS:
             body = await response.text()
             if body.startswith("good") or body.startswith("nochg"):
                 state = body.strip()
-                _LOGGER.debug(f"State:{state}")
+                _LOGGER.debug("State: %s",state)
                 return {
                     "state": state, "public_ip": public_ip, "last_seen": datetime.now()
                 }
             raise CannotConnect(f"Can't connect to API ({body})")
         except ClientError as error:
-            raise CannotConnect(f"Error {error.strerror}") from error
+            raise CannotConnect(error) from error
         except asyncio.TimeoutError as error:
             raise TimeoutExpired(f"API Timeout from {self.alias}") from error
 
@@ -59,7 +59,7 @@ class PDNS:
             if response.status != 200:
                 raise CannotConnect(f"Can't fetch public ip ({response.status})")
             public_ip = await response.text()
-            _LOGGER.debug(f"Public Ip:{public_ip}")
+            _LOGGER.debug("Public Ip: %s",public_ip)
             return public_ip
         except asyncio.TimeoutError as error:
             raise TimeoutExpired("Timeout to get public ip address") from error

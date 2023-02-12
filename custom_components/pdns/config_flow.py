@@ -8,7 +8,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from . import CONF_ALIAS, CONF_PDNSSRV, DOMAIN
-from .pdns import PDNS, CannotConnect, DetectionFailed, PDNSFailed, TimeoutExpired
+from .pdns import PDNS, CannotConnect, PDNSFailed, TimeoutExpired
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -53,8 +53,6 @@ class PDNSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "timeout"
             except PDNSFailed as err:
                 errors["base"] = err.args[0]
-            except DetectionFailed:
-                errors["base"] = "detect_failed"
             else:
                 return self.async_create_entry(
                     title=f"PowerDNS ({user_input[CONF_ALIAS]})", data=user_input
