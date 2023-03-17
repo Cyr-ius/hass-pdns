@@ -1,10 +1,10 @@
 {
+  "domain": "pdns",
+  "name": "PowerDNS DynHost",
   "codeowners": ["@Cyr-ius"],
   "config_flow": true,
   "documentation": "https://github.com/Cyr-ius/hass-pdns",
-  "domain": "pdns",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Cyr-ius/hass-pdns/issues",
-  "name": "PowerDNS DynHost",
   "version": "2.4.1"
 }
