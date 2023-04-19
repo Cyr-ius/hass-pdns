@@ -1,4 +1,6 @@
 """binary sensor entities."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -30,10 +32,8 @@ class DyndnsStatus(CoordinatorEntity[PDNSDataUpdateCoordinator], BinarySensorEnt
     def __init__(self, coordinator):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        # self._attr_name = coordinator.config_entry.data["dns_alias"]
         self._attr_name = coordinator.config_entry.title
         self._attr_unique_id = coordinator.config_entry.entry_id
-        self.coordinator = coordinator
 
     @property
     def is_on(self):

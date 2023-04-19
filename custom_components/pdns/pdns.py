@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from datetime import datetime
+import logging
+from typing import Any
 
 from aiohttp import BasicAuth, ClientError, ClientSession
 
@@ -23,7 +24,12 @@ class PDNS:
     """Powerdns class."""
 
     def __init__(
-        self, servername: str, alias: str, username: str, password: str, session=None
+        self,
+        servername: str,
+        alias: str,
+        username: str,
+        password: str,
+        session: ClientSession = None,
     ) -> None:
         """Initialize."""
         self.url = f"https://{servername}/nic/update"
@@ -31,12 +37,14 @@ class PDNS:
         self.session = session if session else ClientSession()
         self.authentification = BasicAuth(username, password)
 
-    async def async_update(self) -> dict(str, str, datetime):
+    async def async_update(self) -> dict[str, Any]:
         """Update Alias to Power DNS."""
         try:
             public_ip = await self._async_get_public_ip()
             params = {"myip": public_ip, "hostname": self.alias}
-            response = await self.session.get(self.url, params=params, auth=self.authentification)
+            response = await self.session.get(
+                self.url, params=params, auth=self.authentification
+            )
             if response.status != 200:
                 raise CannotConnect(f"Can't connect to API ({response.status})")
             body = await response.text()
@@ -44,7 +52,9 @@ class PDNS:
                 state = body.strip()
                 _LOGGER.debug("State: %s", state)
                 return {
-                    "state": state, "public_ip": public_ip, "last_seen": datetime.now()
+                    "state": state,
+                    "public_ip": public_ip,
+                    "last_seen": datetime.now(),
                 }
             raise CannotConnect(f"Can't connect to API ({body})")
         except ClientError as error:
@@ -52,7 +62,7 @@ class PDNS:
         except asyncio.TimeoutError as error:
             raise TimeoutExpired(f"API Timeout from {self.alias}") from error
 
-    async def _async_get_public_ip(self) -> None:
+    async def _async_get_public_ip(self) -> str:
         """Get Public ip address."""
         try:
             response = await self.session.get(MYIP_CHECK)
