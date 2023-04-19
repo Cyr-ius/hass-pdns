@@ -10,8 +10,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from . import CONF_ALIAS, CONF_PDNSSRV, DOMAIN
 from .pdns import PDNS, CannotConnect, PDNSFailed, TimeoutExpired
+from .const import CONF_ALIAS, CONF_PDNSSRV, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
