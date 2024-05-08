@@ -1,9 +1,10 @@
 """PDNS Api."""
+
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Any
 
 from aiohttp import BasicAuth, ClientError, ClientSession
@@ -35,7 +36,7 @@ class PDNS:
         self.url = f"https://{servername}/nic/update"
         self.alias = alias
         self.session = session if session else ClientSession()
-        self.authentification = BasicAuth(username, password)
+        self.authentication = BasicAuth(username, password)
 
     async def async_update(self) -> dict[str, Any]:
         """Update Alias to Power DNS."""
@@ -43,7 +44,7 @@ class PDNS:
             public_ip = await self._async_get_public_ip()
             params = {"myip": public_ip, "hostname": self.alias}
             response = await self.session.get(
-                self.url, params=params, auth=self.authentification
+                self.url, params=params, auth=self.authentication
             )
             if response.status != 200:
                 raise CannotConnect(f"Can't connect to API ({response.status})")
