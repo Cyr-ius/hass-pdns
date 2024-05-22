@@ -1,25 +1,23 @@
 """binary sensor entities."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, PDNSDataUpdateCoordinator
+from . import PDNSConfigEtry, PDNSDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: PDNSConfigEtry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Defer binary sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([DyndnsStatus(coordinator)])
 
 
